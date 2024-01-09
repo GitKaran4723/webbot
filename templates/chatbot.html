@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Solver</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif; /* Use Roboto font */
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        
+        h1 {
+            font-family: 'Roboto', sans-serif; /* Apply Roboto font to headers */
+            color: #333;
+            margin-bottom: 20px; /* Add some spacing below the heading */
+        }
+        
+        form {
+            margin-top: 20px;
+        }
+        
+        label {
+            font-size: 18px;
+            color: #333;
+            margin-right: 10px;
+        }
+        
+        input {
+            padding: 8px;
+            font-size: 16px;
+            width: 300px;
+            margin-right: 10px; /* Add some spacing to the right of the input */
+        }
+        
+        button {
+            padding: 8px 15px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pnemo-Bot</h1>
+    <form id="queryForm" onsubmit="submitQuery(); return false;">
+        <label for="query">Enter your query:</label>
+        <input type="text" id="query" name="query" required>
+        <button type="submit">Submit</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        function submitQuery() {
+            const query = document.getElementById('query').value;
+
+            // Send the query to the backend
+            fetch(`/solve`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `query=${encodeURIComponent(query)}`,
+            })
+            .then(response => {
+                console.log(response);  // Log the entire response for debugging
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.clone().text();  // Clone the response before reading the body
+            })
+            .then(data => {
+                console.log(data);  // Log the data for debugging
+                document.getElementById('result').innerHTML = `<h3>${query}</h3> ${formatResponse(data)}`;
+                document.getElementById('query').value = '';  // Clear the input field
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+            return false;  // Prevent the default form submission behavior
+        }
+
+        function convertToCodeBlock(text) {
+            const codeBlockRegex = /```([\s\S]*?)```/g;
+        
+            return text.replace(codeBlockRegex, (match, code) => {
+                // Replace each code block with the appropriate HTML or formatting
+                return `<pre><code>${escapeHtml(code)}</code></pre>`;
+            });
+        }
+        
+        function escapeHtml(html) {
+            // Function to escape special characters in HTML
+            const escapeChars = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            };
+        
+            return html.replace(/[&<>"']/g, (match) => escapeChars[match]);
+        }
+        
+        function formatResponse(response) {
+            // Split the response into paragraphs
+            const paragraphs = response.split('\n');
+        
+            // Format each paragraph
+            const formattedParagraphs = paragraphs.map(paragraph => {
+                // Highlight text between ** and remove the **
+                paragraph = paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+                // Treat a line with a single * as an unordered list item
+                if (/^\s*\*\s+(.+)\s*$/.test(paragraph)) {
+                    return `<ul><li>${RegExp.$1}</li></ul>`;
+                }
+        
+                return `<p>${paragraph.trim()}</p>`;
+            });
+        
+            // Join the formatted paragraphs into a single HTML string
+            const formattedResponse = formattedParagraphs.join('');
+        
+            return formattedResponse;
+        }
+        
+    </script>
+</body>
+</html>
