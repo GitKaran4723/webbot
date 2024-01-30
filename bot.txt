@@ -1,0 +1,8 @@
+import google.generativeai as g
+g.configure(api_key="AIzaSyA3ObDZcifPFy-QJojBhqdYAvSVUDcJnKU")
+while True:
+    prompt = input()
+    response = g.GenerativeModel(model_name="gemini-pro").generate_content([prompt]).text
+    print(response)
+    with open("datagather.txt","w") as f:
+        f.write(prompt + "\n" + response +"===========================\n")
