@@ -1,5 +1,5 @@
 import google.generativeai as g
-g.configure(api_key="AIzaSyA3ObDZcifPFy-QJojBhqdYAvSVUDcJnKU")
+g.configure(api_key="AIzaSyA3ObDZcifPFy-QJVUDcJnKU")
 while True:
     prompt = input()
     response = g.GenerativeModel(model_name="gemini-pro").generate_content([prompt]).text
